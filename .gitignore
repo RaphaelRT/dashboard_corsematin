@@ -4,3 +4,4 @@ api_key.json
 client_secrets.json
 dash/
 env
+cache-directory/
