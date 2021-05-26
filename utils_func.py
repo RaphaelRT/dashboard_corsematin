@@ -99,7 +99,7 @@ class Utils():
             #print(f"--- {year} ---")
             months = [
                 {"january": 31},
-                {"february": 28 if utils.is_leap(year) == False else 29},
+                {"february": 28 if self.is_leap(year) == False else 29},
                 {"march": 31},
                 {"april": 30},
                 {"may": 31},
