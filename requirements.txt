@@ -61,4 +61,3 @@ urllib3
 Werkzeug
 zipp
 flask_caching
-numba
