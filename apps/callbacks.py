@@ -15,6 +15,7 @@ import ssl
 from flask_caching import Cache
 import time
 from dash_app import app
+from drive import data_files
 
 
 cache = Cache(app.server, config={
@@ -28,13 +29,12 @@ utils = Utils()
 def get_initial_datas():
     #BASE
     tic = time.perf_counter()
-    df = pd.read_csv("./data/2015 - 2020.csv")
+    df = pd.read_csv(data_files['2015 - 2020.csv'])
     df["Months_char"] = df["Months"]
     df["Months"] = utils.months_to_number_dataset(df["Months"])
     df["Day"] = 1
     df["Date"] = pd.to_datetime(df[["Months", "Years", "Day"]])
-
-    region = geopandas.read_file('./data/regions.geojson')
+    region = geopandas.read_file(data_files['regions.geojson'])
     region.rename({'nom': 'd_geo_region'}, axis=1, inplace=True)
     region = region[region['d_geo_region'].apply(lambda g : utils.is_in_metro(g))]
     region['d_geo_region'] = region['d_geo_region'].apply(lambda g : utils.format_region(g))
