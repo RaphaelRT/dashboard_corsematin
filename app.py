@@ -3,7 +3,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Output, Input
 import ssl
-from dash import app
+from dash_app import app
 from apps.layouts import *
 from apps.callbacks import *
 
