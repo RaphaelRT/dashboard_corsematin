@@ -34,10 +34,26 @@ def get_initial_datas():
     df["Months"] = utils.months_to_number_dataset(df["Months"])
     df["Day"] = 1
     df["Date"] = pd.to_datetime(df[["Months", "Years", "Day"]])
-    region = geopandas.read_file(data_files['regions.geojson'])
-    region.rename({'nom': 'd_geo_region'}, axis=1, inplace=True)
-    region = region[region['d_geo_region'].apply(lambda g : utils.is_in_metro(g))]
-    region['d_geo_region'] = region['d_geo_region'].apply(lambda g : utils.format_region(g))
+    region = geopandas.read_file('https://france-geojson.gregoiredavid.fr/repo/regions.geojson')
+    region['d_geo_region'] = region['nom'].apply(lambda g : utils.format_region(g) if utils.is_in_metro(g) else None)
+    region['geoids'] = region.index
+    #print(region)
+    #for i, feat in enumerate(region['features']):
+      #f#eat['id'] = i
+    #print("OK",region['features'][0])
+    #regiondf = pd.DataFrame(data={
+        # geoid must match county-shape-ids in json file (must start with 0 and increase with no missing one)
+        #'geoids' :    [feat['id']                             for feat in region['features']],
+        #"code" : [feat['properties'].get('code')                            for feat in region['features']],
+        #'nom'  :    [utils.format_region(feat['properties'].get('nom')) if utils.is_in_metro(feat['properties'].get('nom')) else None for feat in region['features']],
+        #'geometry' :    [feat['geometry']                             for feat in region['features']]
+    #})
+    #print(regiondf[])
+    #with open(data_files['regions.json']) as json_file:
+      #region = json.load(json_file)
+    #region = geopandas.read_file(data_files['regions.geojson'])
+    #region['d_geo_region'] = region['nom'].apply(lambda g : utils.format_region(g) if utils.is_in_metro(g) else None)
+
     toc = time.perf_counter()
     app.logger.info(f"get_initial_datas finished in {toc - tic:0.4f} seconds")
     return [df, region]
@@ -45,7 +61,6 @@ def get_initial_datas():
 initial_datas = get_initial_datas()
 df = initial_datas[0]
 region = initial_datas[1]
-
 
 @cache.memoize(timeout=TIMEOUT)
 def get_datas(filtered_data, pathname):
@@ -77,22 +92,18 @@ def get_datas(filtered_data, pathname):
         "seasonal": seasonal
         }
   if pathname == "trafic-orifin":
+      df_group_region = filtered_data.copy()
+      df_group_region['d_geo_region'] = df_group_region['d_geo_region'].apply(lambda g : utils.format_region(g))
       #map
-      df_map = filtered_data.copy()
-      df_map['d_geo_region'] = df_map['d_geo_region'].apply(lambda g : utils.format_region(g))
-      
-      merged_map = geopandas.pd.merge(region, 
-                    df_map,
-                    on='d_geo_region')
-      #merged_map = region.set_index('d_geo_region').join(df_map.set_index('d_geo_region'))
+      df_map = df_group_region.copy()
+      #df_map['d_geo_region'] = df_map['d_geo_region'].apply(lambda g : utils.format_region(g))
+      merged_map = region.set_index('d_geo_region').join(df_map.set_index('d_geo_region'), how='inner')
+      #print(merged_map.head(1))
 
-      merged_map.to_file("./data/regions.json", driver='GeoJSON')
-      with open('./data/regions.json') as response:
-          regions = json.load(response)
       
       #pie chart
-      df_pie_chart = filtered_data.copy()
-      df_pie_chart["d_geo_region"] = df_pie_chart["d_geo_region"].apply(lambda g : utils.format_region(g))
+      df_pie_chart = df_group_region.copy()
+      #df_pie_chart["d_geo_region"] = df_pie_chart["d_geo_region"].apply(lambda g : utils.format_region(g))
       df_pie_chart["d_geo_region"] = df_pie_chart["d_geo_region"].apply(utils.categorize_region)
       df_pie_chart_sum = df_pie_chart.groupby(["d_geo_region"]).sum()["m_visits"]
 
@@ -103,7 +114,7 @@ def get_datas(filtered_data, pathname):
       ).unstack()
 
       return {
-          "map": regions,
+          "map": region,
           "merged_map": merged_map,
           "df_pie_chart_sum": df_pie_chart_sum,
           "df_multiple_bar_chart":df_multiple_bar_chart
@@ -288,16 +299,54 @@ def update_charts(pathname, start_date, end_date):
     )
     filtered_data = df.loc[mask, :]
     datas = get_datas(filtered_data, "trafic-orifin")
-
+    print(datas["map"])
     fig = px.choropleth(datas["merged_map"], geojson=datas["map"], color="m_visits",
-                    locations="d_geo_region", featureidkey="properties.d_geo_region",
-                    projection="mercator", color_continuous_scale="orrd", labels={"m_visits": "Nombres de visites"}
-                  )
+                    locations="geoids", featureidkey="properties.geoids",
+                    projection="mercator", color_continuous_scale="orrd", labels={"m_visits": "Nombres de visites"})
+    #fig = px.choropleth(datas["merged_map"], geojson=region, color=datas["merged_map"]["m_visits"],
+                    #locations=datas["merged_map"]["geoids"],color_continuous_scale="orrd", labels={"m_visits": "Nombres de visites"}
+                  #)
+    #print(datas["merged_map"].geoids[0])
+    #fig = go.Figure(go.Choroplethmapbox(
+          #geojson=region,
+          #locations=datas["merged_map"].geoids,
+          #featureidkey="geoids",
+          #z=datas["merged_map"].m_visits,
+          #colorscale="orrd",
+          #colorbar=dict(thickness=20, ticklen=3, title="Neuinfektionen pro 100.000 Einwohner und Tag", titleside="right"),
+          #zmin=0, zmax=10,
+          #marker_opacity=0.5, marker_line_width=0,
+          #hovertemplate=
+              #"<b>%{text}</b><br>" +
+              #"%{z:.2f}<br>" +
+              #"<extra></extra>",
+              #))
+    #fig.update_layout(
+                        #uirevision=True, # keep zoom,panning, etc. when updating
+                        #autosize=True,
+                        #legend=dict(
+                        #    # Adjust click behavior
+                        #    itemclick="toggleothers",
+                        #    itemdoubleclick="toggle",
+                        #),
+                        #xaxis=dict(
+                        #    autorange='reversed',
+                        #    fixedrange=True
+                        #),
+                        #yaxis=dict(
+                        #    autorange='reversed',
+                        #    fixedrange=True
+                        #),
+                        #width=500, height=450,
+                        #mapbox_style="open-street-map", # https://plotly.com/python/mapbox-layers/
+                        #mapbox_zoom=4.5,
+                        #mapbox_center = {"lat": 51.30, "lon": 10.45},
+                        #margin={"r":0,"t":0,"l":0,"b":0})
     fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(height=600, title="Heatmap du nombre de visite en france métropolitaine")
 
     map_chart_figure = fig
-
+    #print(type(map_chart_figure))
 
     fig = px.pie(datas["df_pie_chart_sum"], values=datas["df_pie_chart_sum"].values, names=datas["df_pie_chart_sum"].index, title='Répartition des visites sur les régions de 2015 à 2020')
     pie_chart_figure = fig
