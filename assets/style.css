@@ -93,3 +93,35 @@ body {
   left: -30%;
   opacity: 0.2;
 }
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navBar a{
+  margin-right: 1em;
+  text-decoration: none;
+  color: white;
+  display: inline-block;
+  position: relative;
+}
+.navBar a:after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: -0.3em;
+  left: 0;
+  background-color: white;
+  transform-origin: bottom right;
+  transition: transform 0.25s ease-out;
+}
+
+.navBar a:hover:after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+.loading {
+  height: 0;
+}
