@@ -14,7 +14,7 @@ import geopandas
 import ssl
 from flask_caching import Cache
 import time
-from app import app
+from dash import app
 
 
 cache = Cache(app.server, config={
