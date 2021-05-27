@@ -10,8 +10,6 @@ import csv
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import unidecode
-import Levenshtein
 from tqdm import tqdm
 import time
 from datetime import datetime

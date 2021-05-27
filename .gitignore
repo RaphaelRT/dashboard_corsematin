@@ -3,5 +3,5 @@ __pycache__/
 api_key.json
 client_secrets.json
 dash/
-env
+.env
 cache-directory/
