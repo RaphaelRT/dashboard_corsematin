@@ -23,6 +23,7 @@ cache = Cache(app.server, config={
     'CACHE_DIR': 'cache-directory'
 })
 
+
 TIMEOUT = 30
 utils = Utils()
 @cache.memoize(timeout=TIMEOUT)
@@ -138,6 +139,7 @@ def get_datas(filtered_data, pathname):
     ],
 )
 def update_charts(pathname, start_date, end_date):
+    cache.clear()
     print(pathname)
     default_color = "#e74c3c"
     default_theme = "gridon"

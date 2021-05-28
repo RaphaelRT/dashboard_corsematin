@@ -17,24 +17,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-#print(os.environ)
-
-champs_cred = [
-  "type",
-  "project_id",
-  "private_key_id",
-  "private_key",
-  "client_email",
-  "client_id",
-  "auth_uri"
-  "token_uri",
-  "auth_provider_x509_cert_url",
-  "client_x509_cert_url"
-]
-#champs_cred = {c : os.environ.get(c.upper())  for c in champs_cred}
-#champs_cred["private_key"] = champs_cred["private_key"].replace("\n", "")
-#with open('credentials.json', 'w') as fp:
-    #json.dump(champs_cred, fp, indent=2, separators=(',', ': '))
 json_str = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 json_data = json.loads(json_str)
 json_data['private_key'] = json_data['private_key'].replace('\\n', '\n')
