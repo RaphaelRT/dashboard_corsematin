@@ -7,8 +7,6 @@ from reco import reco_callbacks
 import dash
 import pandas as pd
 from utils_func import Utils
-from statsmodels.tsa.seasonal import seasonal_decompose
-import geopandas
 from flask_caching import Cache
 import time
 from dash_app import app

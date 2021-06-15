@@ -2,9 +2,6 @@ import dash
 import dash_html_components as html
 from dash.dependencies import Output, Input, State
 from utils_func import Utils
-import plotly.express as px
-import plotly.graph_objs as go
-import time
 from dash_app import app
 
 utils = Utils()

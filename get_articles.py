@@ -1,24 +1,14 @@
-import geopandas
 import requests
-from requests.auth import HTTPBasicAuth
-import pprint
-import pandas as pd
 import os
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
 import csv
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 import time
 from datetime import datetime
-from sklearn.model_selection import train_test_split
 import re
 from bs4 import BeautifulSoup
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql.types import StructType,StructField, StringType, IntegerType, DoubleType
+from pyspark.sql.types import StructType, StringType, IntegerType, DoubleType
 import random
 from utils_func import Utils
 

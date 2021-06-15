@@ -1,7 +1,6 @@
 import geopandas
 import requests
 from requests.auth import HTTPBasicAuth
-import pprint
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -14,30 +13,9 @@ import unidecode
 import Levenshtein
 from tqdm import tqdm
 import time
-from datetime import datetime
-from sklearn.model_selection import train_test_split
-import re
-from bs4 import BeautifulSoup
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql.types import StructType,StructField, StringType, IntegerType, DoubleType
-import statsmodels.api as sm
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.graphics.tsaplots import plot_pacf
-from statsmodels.tsa.seasonal import seasonal_decompose
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from statsmodels.tsa.arima_model import ARIMA
-from matplotlib.ticker import FormatStrFormatter
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer
-from nltk import word_tokenize
-nltk.download(['punkt','wordnet','stopwords'])
 import spacy
 spacy.cli.download("fr_core_news_md")
 nlp = spacy.load('fr_core_news_md')
-import re
 import ssl
 from drive import data_files
 from io import StringIO
