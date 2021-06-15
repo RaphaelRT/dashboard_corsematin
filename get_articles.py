@@ -20,6 +20,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.sql.types import StructType,StructField, StringType, IntegerType, DoubleType
 import random
+from utils_func import Utils
+
+utils = Utils()
 
 schema_pages = StructType() \
      .add("d_site",StringType(),True) \
@@ -36,6 +39,7 @@ schema_pages = StructType() \
 #df_pages = pd.read_csv("2015-2020_pages.csv")
 spark = SparkSession.builder.master("local[*]") \
                     .appName('SparkCorseMatin') \
+                    .config('spark.driver.host','127.0.0.1')\
                     .getOrCreate()
 sc = spark.sparkContext
 
@@ -53,15 +57,18 @@ def init_soup(url):
     return soup
 
 def get_url(keywords):
-    keywords = re.sub(r'[^0-9a-zA-Z]+', ' ', keywords).strip()
-    url = f"https://www.corsematin.com/recherche?query={keywords.replace(' ', '+')}"
-    soup = init_soup(url)
-    heading_object=soup.select("div.content>a")
-    results_links = {" ".join(info["href"].replace("https://www.corsematin.com/articles/", "").split("-")[:-1]): info["href"] for info in heading_object}
-    if keywords in results_links:
-        return results_links[keywords]
-    else: 
-        return None
+    try:
+        keywords = re.sub(r'[^0-9a-zA-Z]+', ' ', keywords).strip()
+        url = f"https://www.corsematin.com/recherche?query={keywords.replace(' ', '+')}"
+        soup = init_soup(url)
+        heading_object=soup.select("div.content>a")
+        results_links = {" ".join(info["href"].replace("https://www.corsematin.com/articles/", "").split("-")[:-1]): info["href"] for info in heading_object}
+        if keywords in results_links:
+            return results_links[keywords]
+        else: 
+            return None
+    except:
+        print("error with "+ f"https://www.corsematin.com/recherche?query={keywords.replace(' ', '+')}")
 
 def get_infos(soup, type_of_data):
     try:
@@ -90,21 +97,8 @@ def get_infos(soup, type_of_data):
             return len(soup.select("section.commentaire.moderated"))
     except:
         return None
-    
-    
-df_pages = spark.read.option("delimiter", ",").option("header","true").schema(schema_pages).csv("/Users/raphaelrobert/Desktop/test_dashboard/data/2015-2021_pages.csv").repartition(36)
-#url = get_url("«allahou-akbar»-lance-aux-policiers-deux-etudiants-relaxes-a-ajaccio")
-#soup = init_soup(url)
-#print(f'Localité : {get_infos(soup, "geo")}')
-#print(f'Titre : {get_infos(soup, "title")}')
-#print(f'Autheur : {get_infos(soup, "author")}')
-#print(f'Date : {get_infos(soup, "date")}')
-#print(f'Heure : {get_infos(soup, "hours")}')
-#print(f'Section : {get_infos(soup, "section")}')
-#print(f'Article : {get_infos(soup, "content")}')
-#print(f'Nombre total de com : {get_infos(soup, "nbr_of_comments")}')
-#print(f'Nombre de com haineux : {get_infos(soup, "nbr_of_del_comments")}')
 
+df_pages = spark.read.option("delimiter", ",").option("header","true").schema(schema_pages).csv(os.environ.get("BASENAME") + "data/2015-2021_pages.csv").repartition(36)
 df_pages_RDD = df_pages.rdd
 df_pages_RDD = df_pages_RDD\
     .filter(lambda x: ((len(re.findall('-', str(x[1]))) > 3) & ("App" not in x[0])))\
@@ -118,37 +112,93 @@ tic = time.perf_counter()
 current_time = now.strftime("%H:%M:%S")
 print("Launch at :", current_time)
 def add_content(iterator):
-    global counter
-    final_iterator = []
-    geo = None
-    title = None
-    author = None
-    date = None
-    hours = None
-    section_name = None
-    content = None
-    nbr_of_comments = None
-    nbr_of_del_comments = None
-    #print(get_url(f"https://www.google.com/search?q={x[1].split('::')[-1].replace('-', '+')}"))
-    for x in iterator:
-        url = get_url(x[1].split('::')[-1])
-        if url:
-            soup = init_soup(url)
-            
-            geo = get_infos(soup, "geo")
-            title = get_infos(soup, "title")
-            author = get_infos(soup, "author")
-            date = get_infos(soup, "date")
-            hours = get_infos(soup, "hours")
-            section_name = get_infos(soup, "section")
-            content = get_infos(soup, "content")
-            nbr_of_comments = get_infos(soup, "nbr_of_comments")
-            nbr_of_del_comments = get_infos(soup, "nbr_of_del_comments")
-            counter = counter + 1
-            print(f"{counter} / {len_RDD}")
-            print(x[8], x[9])
+    try:
+        global counter
+        final_iterator = []
+        geo = None
+        title = None
+        author = None
+        date = None
+        hours = None
+        section_name = None
+        content = None
+        nbr_of_comments = None
+        nbr_of_del_comments = None
+        words_accurate = None
+        word_count = None
+        char_count = None
+        sentence_count = None
+        avg_word_length = None
+        avg_sentence_lenght = None
         #print(get_url(f"https://www.google.com/search?q={x[1].split('::')[-1].replace('-', '+')}"))
-        final_iterator.append((x[0], x[1], x[2], x[3], x[4],x[5], x[6], x[7], x[8], x[9], url, geo, title, author, date, hours, section_name, content, nbr_of_comments, nbr_of_del_comments))   
+        for x in iterator:
+            url = get_url(x[1].split('::')[-1])
+            if url:
+                try:
+                    print("--------")
+                    soup = init_soup(url)
+                    print(f"url: {url}")
+                    geo = get_infos(soup, "geo")
+                    print(f"geo:{geo}")
+                    title = get_infos(soup, "title")
+                    print(f"title:{title}")
+                    author = get_infos(soup, "author")
+                    print(f"author:{author}")
+                    date = str(get_infos(soup, "date")).split(" ")
+                    print(f"dateArr: {date}")
+                    date = f"{date[0]}-{utils.get_months_numbers_dict(date[1]):02d}-{date[2]} {get_infos(soup, 'hours')}"
+                    print(f"date: {date}")
+                    section_name = get_infos(soup, "section")
+                    content = utils.remove_trailling(get_infos(soup, "content"))
+                    nbr_of_comments = get_infos(soup, "nbr_of_comments")
+                    nbr_of_del_comments = get_infos(soup, "nbr_of_del_comments")
+                    words_accurate = utils.get_words_accurate(content)
+                    word_count = int(utils.get_word_count(content))
+                    char_count = int(utils.get_char_count(content))
+                    sentence_count = utils.get_sentence_count(content)
+                    avg_word_length = float(char_count / word_count)
+                    avg_sentence_lenght = float(word_count / sentence_count)
+                    word_count_title = int(utils.get_word_count(title))
+                    char_count_title = int(utils.get_char_count(title))
+                    print("--------")
+                except Exception as e:
+                    print("error")
+                    print(e)
+                counter = counter + 1
+                #print(f"{counter} / {len_RDD}")
+                print(x[8], x[9])
+            #print(get_url(f"https://www.google.com/search?q={x[1].split('::')[-1].replace('-', '+')}"))
+            final_iterator.append((
+                x[0],
+                x[1],
+                x[2],
+                x[3], 
+                x[4],
+                x[5], 
+                x[6], 
+                x[7], 
+                x[8], 
+                x[9], 
+                url, 
+                geo, 
+                title, 
+                author, 
+                date, 
+                section_name, 
+                content, 
+                nbr_of_comments, 
+                nbr_of_del_comments,
+                words_accurate,
+                word_count,
+                char_count,
+                sentence_count,
+                avg_word_length,
+                avg_sentence_lenght,
+                word_count_title,
+                char_count_title
+                ))
+    except:
+        print("error append")
     return iter(final_iterator)
 columns_name = ["d_site",
                 "d_page",
@@ -165,11 +215,18 @@ columns_name = ["d_site",
                 "title",
                 "author",
                 "date",
-                "hours",
                 "section_name",
                 "content",
                 "nbr_of_comments",
-                "nbr_of_del_comments"
+                "nbr_of_del_comments",
+                "content_words_accurate",
+                "word_count",
+                "char_count",
+                "sentence_count",
+                "avg_word_length",
+                "avg_sentence_lenght",
+                "word_count_title",
+                "char_count_title"
                ]
 
 df_pages_RDD = df_pages_RDD.mapPartitions(add_content).persist()

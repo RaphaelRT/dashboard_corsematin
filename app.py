@@ -13,6 +13,7 @@ server = app.server
 app.layout = html.Div(
     children=[
         html.Div(
+            id="header",
             children=[
                 html.Div(children=[
                   html.Img(src="https://d2p1ubzgqn8tkf.cloudfront.net/storage/logo.svg"),
@@ -20,55 +21,39 @@ app.layout = html.Div(
                     dcc.Location(id='url', refresh=False),
                     dcc.Link('Home', href='/'),
                     dcc.Link('Origine du trafic', href='/trafic-origin'),
+                    dcc.Link('Recommandations', href='/reco'),
                   ], className="navBar")
                 ], className="nav"),
                 html.H1(
                     children="📈 Dashboard Corse Matin", className="header-title"
                 ),
                 html.P(
-                    children="Analyses et prédiction sur l'audience"
+                    children="Analyses et recommandations sur l'audience"
                     " de tout les sites"
-                    " entre 2015 and 2020",
+                    " entre 2015 er 2020",
                     className="header-description",
                 ),
             ],
             className="header",
-        ),
-        html.Div(
-            children=[
-                html.Div(
-                    children=[
-                        html.Div(
-                            children="Date Range", className="menu-title"
-                        ),
-                        dcc.DatePickerRange(
-                            id="date-range",
-                            display_format='MM/Y',
-                            min_date_allowed=df.Date.min().date(),
-                            max_date_allowed=df.Date.max().date(),
-                            start_date=df.Date.min().date(),
-                            end_date=df.Date.max().date(),
-                        ),
-                    ]
-                ),
-            ],
-            className="menu",
         ),
         dcc.Loading(
             id="loading-container",
             color="#e74c3c",
             type="default",
             className="loading",
-            parent_className="loading"
+            parent_className="loading",
+            fullscreen=True
         ),
     ]
 )
-@app.callback([Output("loading-container", "children")],[Input('url', 'pathname')])
+@app.callback([Output("loading-container", "children"), Output("header", "style")],[Input('url', 'pathname')])
 def displayPage(pathname):
   if pathname == "/":
-    return home_layout
+    return home_layout, {"height": "288px"}
   if pathname == "/trafic-origin":
-    return trafic_origin_layout
+    return trafic_origin_layout, {"height": "288px"}
+  if pathname == "/reco":
+      return reco_layout, {"padding-bottom": "1.1rem"}
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)

@@ -29,6 +29,20 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.arima_model import ARIMA
 from matplotlib.ticker import FormatStrFormatter
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+from nltk import word_tokenize
+nltk.download(['punkt','wordnet','stopwords'])
+import spacy
+spacy.cli.download("fr_core_news_md")
+nlp = spacy.load('fr_core_news_md')
+import re
+import ssl
+from drive import data_files
+from io import StringIO
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class Utils():
@@ -49,6 +63,20 @@ class Utils():
             "october": 10,
             "november": 11,
             "december": 12
+        }
+        self.months_numbers_fr = {
+            "janvier": 1,
+            "février": 2,
+            "mars": 3,
+            "avril": 4,
+            "mai": 5,
+            "juin": 6,
+            "juillet": 7,
+            "août": 8,
+            "septembre": 9,
+            "octobre": 10,
+            "novembre": 11,
+            "décembre": 12
         }
         self.regions_names = [
             "Auvergne-Rhône-Alpes",
@@ -143,6 +171,8 @@ class Utils():
         dataset = dataset.copy()
         ds = dataset.apply( lambda x : months_to_number(x) )
         return ds
+    def get_months_numbers_dict(self, month):
+        return self.months_numbers_fr[month]
 
     def sorter(self, column):
         cat = pd.Categorical(column, categories=self.months_numbers)
@@ -208,6 +238,48 @@ class Utils():
                     el.set_title(el.yaxis.get_label().get_text(), fontsize=fontsize, pad = pad_title)
                     el.yaxis.set_visible(False)
                     el.xaxis.set_visible(False)
+    def remove_trailling(self, text):
+        return " ".join([s for s in text.replace("\n", " ").split(" ") if s != " "]).strip()
+    
+    def get_word_count(self, text):
+        words_arr = [s for s in str(text).split(" ") if len(s) > 0]
+        word_count = len(words_arr)
+        return word_count
+
+    def get_char_count(self, text):
+        words_arr = [s for s in str(text).split(" ") if len(s) > 0]
+        char_count = np.sum([len(w) for w in words_arr])
+        return char_count
+
+    def get_sentence_count(self, text):
+        sentences_arr = [s for s in str(text).split(".") if len(s) > 0]
+        sentence_count = len(sentences_arr)
+        return sentence_count
+
+    def get_words_accurate(self, text):
+        excluded_tags = {"SPACE","NUM","PRON","CCONJ","AUX","DET","CONJ", "VERB", "ADJ", "ADV", "ADP"}
+        words_accurate = " ".join([word.text for sentence in str(text).split(".") for word in nlp(sentence) if word.pos_ not in excluded_tags])
+        return words_accurate
+    def get_initial_datas(self):
+        url = requests.get(data_files['2015 - 2020.csv'])
+        csv_raw = StringIO(url.text)
+        #BASE
+        tic = time.perf_counter()
+        df = pd.read_csv(csv_raw)
+        #df = pd.read_csv("./data/2015 - 2020.csv")
+        df["Months_char"] = df["Months"]
+        df["Months"] = self.months_to_number_dataset(df["Months"])
+        df["Day"] = 1
+        df["Date"] = pd.to_datetime(df[["Months", "Years", "Day"]])
+        region = geopandas.read_file('https://france-geojson.gregoiredavid.fr/repo/regions.geojson')
+        region['d_geo_region'] = region['nom'].apply(lambda g : self.format_region(g) if self.is_in_metro(g) else None)
+        region['geoids'] = region.index
+
+        reco = pd.read_csv(data_files['reco.csv'], error_bad_lines=False)
+        #reco = pd.read_csv("./data/reco.csv", error_bad_lines=False)
+        toc = time.perf_counter()
+        #app.logger.info(f"get_initial_datas finished in {toc - tic:0.4f} seconds")
+        return [df, region, reco]
             
 #utils = Utils()
 
