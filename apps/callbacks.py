@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.insert(0, os.environ.get("BASENAME") + 'apps/callbacks')
+print(os.getcwd(), "OUIIIII")
+sys.path.insert(0, os.getcwd() + '/apps/callbacks')
 from trafics import trafic_callbacks
 from home import home_callbacks
 from reco import reco_callbacks

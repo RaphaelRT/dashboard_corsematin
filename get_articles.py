@@ -88,7 +88,7 @@ def get_infos(soup, type_of_data):
     except:
         return None
 
-df_pages = spark.read.option("delimiter", ",").option("header","true").schema(schema_pages).csv(os.environ.get("BASENAME") + "data/2015-2021_pages.csv").repartition(36)
+df_pages = spark.read.option("delimiter", ",").option("header","true").schema(schema_pages).csv(os.getcwd()  + "/data/2015-2021_pages.csv").repartition(36)
 df_pages_RDD = df_pages.rdd
 df_pages_RDD = df_pages_RDD\
     .filter(lambda x: ((len(re.findall('-', str(x[1]))) > 3) & ("App" not in x[0])))\
