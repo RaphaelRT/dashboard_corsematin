@@ -30,7 +30,7 @@ app.layout = html.Div(
                 html.P(
                     children="Analyses et recommandations sur l'audience"
                     " de tout les sites"
-                    " entre 2015 er 2020",
+                    " entre 2015 et 2020",
                     className="header-description",
                 ),
             ],

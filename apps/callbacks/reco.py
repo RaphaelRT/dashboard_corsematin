@@ -57,7 +57,7 @@ def reco_callbacks(cache, TIMEOUT, region, df):
         sentence_count_input = 0
         sentence_len_count_input = 0
     info_input.append(html.Span(className='output-span', children=f"Nombre de mot = {word_count_input}"))
-    info_input.append(html.Span(className='output-span', children=f"Nombre de caractères = {char_count_input}"))
+    #info_input.append(html.Span(className='output-span', children=f"Nombre de caractères = {char_count_input}"))
     info_input.append(html.Span(className='output-span', children=f"Nombre de phrase = {sentence_count_input}"))
     info_input.append(html.Span(className='output-span', children=f"Longueur de phrase moyenne = {sentence_len_count_input} mot(s)"))
     if n_clicks > 0:
@@ -70,13 +70,13 @@ def reco_callbacks(cache, TIMEOUT, region, df):
                 outputs,
                 ["❌ Le titre a trop de mots !", "❌ Le titre n'a pas assez de mots", "✅ Le titre a le bon nombre de mots"]
             )
-            outputs = generate_message(
-                reco_stats,
-                char_count_title_input,
-                "char_count_title",
-                outputs,
-                ["❌ Le titre a trop de caractères !", "❌ Le titre a pas assez de caractères", "✅ Le titre a le bon nombre de caractères"]
-            )
+            #outputs = generate_message(
+                #reco_stats,
+                #char_count_title_input,
+                #"char_count_title",
+                #outputs,
+                #["❌ Le titre a trop de caractères !", "❌ Le titre a pas assez de caractères", "✅ Le titre a le bon nombre de caractères"]
+            #)
             outputs = generate_message(
                 reco_stats,
                 word_count_input,
